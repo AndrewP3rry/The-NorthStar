@@ -4,8 +4,6 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { Compass, Flame, ArrowRight, BookOpen, BarChart2, Sparkles, Star } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { User as SupabaseUser } from "@supabase/supabase-js";
-import { getSupabaseBrowser } from "@/lib/supabase/browser";
 
 type Language = "vi" | "en";
 type CopyKey = keyof typeof COPY.vi;
@@ -21,6 +19,13 @@ type Stat = {
   icon: ReactNode;
   value: string;
   labelKey: "questions" | "topics" | "free";
+};
+
+type AppUser = {
+  id: string;
+  email: string;
+  name: string;
+  picture?: string;
 };
 
 const LANGUAGE_KEY = "northstar-language";
@@ -97,7 +102,7 @@ const readLanguage = (): Language => {
 export default function HomePage() {
   const router = useRouter();
   const [language, setLanguage] = useState<Language>("vi");
-  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [streak, setStreak] = useState(0);
   const [pendingPracticeHref, setPendingPracticeHref] = useState<string | null>(null);
 
@@ -126,16 +131,17 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    const sb = getSupabaseBrowser();
-    if (!sb) return;
+    fetch("/api/auth/me", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((data: { user: AppUser | null }) => setUser(data.user))
+      .catch(() => setUser(null));
 
-    sb.auth.getUser().then(({ data: { user } }) => setUser(user));
+    const onAuthChange = (event: Event) => {
+      setUser(((event as CustomEvent<AppUser | null>).detail ?? null) as AppUser | null);
+    };
 
-    const { data: { subscription } } = sb.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
+    window.addEventListener("northstar-auth-change", onAuthChange as EventListener);
+    return () => window.removeEventListener("northstar-auth-change", onAuthChange as EventListener);
   }, []);
 
   useEffect(() => {
@@ -156,7 +162,7 @@ export default function HomePage() {
     router.push(pendingPracticeHref);
   };
 
-  const displayName = user?.user_metadata.full_name ?? user?.email ?? t.you;
+  const displayName = user?.name ?? user?.email ?? t.you;
 
   return (
     <main className="min-h-screen px-4 pb-20 pt-2">
