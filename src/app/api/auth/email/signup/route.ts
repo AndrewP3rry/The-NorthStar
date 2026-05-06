@@ -9,17 +9,17 @@ type SignUpPayload = {
 };
 
 function validateInput(email: string, username: string, password: string) {
-  if (!/^\S+@\S+\.\S+$/.test(email)) return "Email không h?p l?.";
-  if (!/^[a-zA-Z0-9_]{3,24}$/.test(username)) return "Username ch? g?m ch?, s?, d?u g?ch du?i (3-24 ký t?).";
-  if (!/^(?=.*[A-Z])[A-Za-z\d]{8,12}$/.test(password)) {
-    return "Password ph?i 8-12 ký t?, có ít nh?t 1 ch? in hoa, không c?n ký t? d?c bi?t.";
+  if (!/^\S+@\S+\.\S+$/.test(email)) return "Email không hợp lệ.";
+  if (!/^[a-zA-Z0-9_]{3,24}$/.test(username)) return "Username chỉ gồm chữ, số, dấu gạch dưới (3-24 ký tự).";
+  if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{8,12}$/.test(password)) {
+    return "Password phải 8-12 ký tự, bao gồm chữ hoa, chữ thường và số.";
   }
   return null;
 }
 
 export async function POST(request: Request) {
   if (!supabaseAnonServer) {
-    return NextResponse.json({ ok: false, error: "Thi?u c?u hình Supabase auth." }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Thiếu cấu hình Supabase auth." }, { status: 500 });
   }
 
   const body = (await request.json().catch(() => null)) as SignUpPayload | null;
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
   const existingEmail = await prisma.user.findUnique({ where: { email } });
   if (existingEmail) {
-    return NextResponse.json({ ok: false, error: "Email dã t?n t?i." }, { status: 409 });
+    return NextResponse.json({ ok: false, error: "Email đã tồn tại." }, { status: 409 });
   }
 
   const existingUsername = await prisma.user.findFirst({
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     select: { id: true },
   });
   if (existingUsername) {
-    return NextResponse.json({ ok: false, error: "Username dã t?n t?i." }, { status: 409 });
+    return NextResponse.json({ ok: false, error: "Username đã tồn tại." }, { status: 409 });
   }
 
   const origin = new URL(request.url).origin;
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
   return NextResponse.json({
     ok: true,
     requiresVerification: true,
-    message: "Ðang ký thành công. Vui lòng ki?m tra email d? xác th?c tài kho?n.",
+    message: "Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản.",
   });
 }
 

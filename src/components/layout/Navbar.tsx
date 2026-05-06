@@ -303,7 +303,11 @@ export function Navbar() {
                 className="w-full rounded-2xl border-[2px] border-black px-3 py-2 text-sm outline-none"
               />
               {authMode === "signup" && (
-                <p className="text-xs text-slate-500">{language === "vi" ? "Password: 8-12 ký tự, có ít nhất 1 chữ in hoa." : "Password: 8-12 chars, at least 1 uppercase letter."}</p>
+                <p className="text-xs text-slate-500">
+                  {language === "vi"
+                    ? "Password: 8-12 ký tự, gồm chữ hoa, chữ thường và số."
+                    : "Password: 8-12 chars, include uppercase, lowercase, and a number."}
+                </p>
               )}
               <button
                 type="button"
