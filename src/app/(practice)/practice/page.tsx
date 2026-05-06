@@ -159,8 +159,16 @@ function PracticePageContent() {
 
         const res = await fetch(url, { cache: "no-store" });
         const data = await res.json();
-        
-        setQuestions(data.questions ?? []);
+        if (!res.ok) {
+          throw new Error(data.error ?? "Question request failed");
+        }
+
+        const loadedQuestions = data.questions ?? [];
+        setQuestions(loadedQuestions);
+        setCurrentIndex(0);
+        if (loadedQuestions.length > 0) {
+          setError(null);
+        }
         if (!topic) setStreak(data.streak ?? 0);
         
         setTimeLeft(timeLimit);
@@ -474,7 +482,7 @@ function PracticePageContent() {
             </div>
           </header>
 
-          {error && (
+          {error && questions.length === 0 && (
             <div className="rounded-2xl border-[2px] border-rose-400 bg-rose-50 p-4 text-sm font-bold text-rose-700 shadow-[3px_3px_0px_0px_rgba(239,68,68,0.3)]">
               ⚠️ {error}
             </div>
