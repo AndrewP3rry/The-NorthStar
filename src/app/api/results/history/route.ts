@@ -27,19 +27,23 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ ok: true, source: "database", sessions });
   } catch {
-    const store = await readLocalHistory();
-    const sessions = store.sessions
-      .filter((session) => session.userId === userId)
-      .slice(0, 10)
-      .map((session) => ({
-        id: session.id,
-        score: session.score,
-        correctCount: session.correctCount,
-        wrongCount: session.wrongCount,
-        startedAt: session.startedAt,
-        endedAt: session.endedAt,
-      }));
+    try {
+      const store = await readLocalHistory();
+      const sessions = store.sessions
+        .filter((session) => session.userId === userId)
+        .slice(0, 10)
+        .map((session) => ({
+          id: session.id,
+          score: session.score,
+          correctCount: session.correctCount,
+          wrongCount: session.wrongCount,
+          startedAt: session.startedAt,
+          endedAt: session.endedAt,
+        }));
 
-    return NextResponse.json({ ok: true, source: "local-file", sessions });
+      return NextResponse.json({ ok: true, source: "local-file", sessions });
+    } catch {
+      return NextResponse.json({ ok: true, source: "empty-fallback", sessions: [] });
+    }
   }
 }

@@ -170,13 +170,18 @@ function PracticePageContent() {
           setError(null);
         }
         if (!topic) setStreak(data.streak ?? 0);
-        
         setTimeLeft(timeLimit);
-        await loadHistory();
       } catch {
         setError("Không tải được câu hỏi. Vui lòng thử lại.");
       } finally {
         setLoading(false);
+      }
+
+
+      try {
+        await loadHistory();
+      } catch {
+        // History is optional. A failure here must not show as a question loading error.
       }
     };
     void load();
@@ -228,7 +233,11 @@ function PracticePageContent() {
       const data = await res.json();
       if (!res.ok || !data.ok) { setError(data.error ?? "Nộp bài thất bại."); return; }
       setResult(data.result as SubmitResult);
-      await loadHistory();
+      try {
+        await loadHistory();
+      } catch {
+        // History is optional after submit as well.
+      }
     } catch {
       setError("Có lỗi khi nộp bài.");
     } finally {
@@ -591,40 +600,34 @@ function PracticePageContent() {
 
       {/* Sticky submit bar */}
       <div className="fixed bottom-0 left-0 right-0 z-40 px-4 py-2 bg-gradient-to-t from-white via-white/80 to-transparent sm:py-3">
-        <div className="mx-auto w-full max-w-6xl">
+        <div className="mx-auto w-full max-w-5xl">
           <div className="rounded-3xl border-[3px] border-black bg-white p-3 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] sm:p-4">
-            <div className="grid items-center gap-3 md:grid-cols-[1fr_auto_1fr]">
-              <div className="flex items-center justify-start gap-4 px-1 sm:px-2">
-                <div className="flex min-w-0 flex-col">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Tr?ng th?i</span>
-                  <span className="truncate text-sm font-black text-black">
-                    {answeredCount === questions.length ? "? S?n s?ng n?p b?i!" : `?? l?m ${answeredCount}/${questions.length} c?u`}
-                  </span>
-                </div>
+            <div className="grid items-center gap-3 sm:grid-cols-[1fr_auto] lg:grid-cols-[1fr_1fr_auto]">
+              <div className="flex min-w-0 flex-col px-1 sm:px-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{"Tr\u1ea1ng th\u00e1i"}</span>
+                <span className="truncate text-sm font-black text-black">
+                  {answeredCount === questions.length ? "\u2728 S\u1eb5n s\u00e0ng n\u1ed9p b\u00e0i!" : `\u0110\u00e3 l\u00e0m ${answeredCount}/${questions.length} c\u00e2u`}
+                </span>
               </div>
 
-              <div className="hidden h-9 w-[2px] bg-black/10 md:block" />
-
-              <div className="hidden items-center justify-start gap-4 px-1 sm:px-2 md:flex">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Th?i gian</span>
-                  <span className={`text-sm font-black ${timeLeft !== null && timeLeft <= 120 ? "text-rose-500" : "text-black"}`}>
-                    {timeLeft !== null ? formatTime(timeLeft) : "--:--"} c?n l?i
-                  </span>
-                </div>
+              <div className="hidden min-w-0 flex-col border-l-2 border-black/10 px-4 sm:flex">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{"Th\u1eddi gian"}</span>
+                <span className={`truncate text-sm font-black ${timeLeft !== null && timeLeft <= 120 ? "text-rose-500" : "text-black"}`}>
+                  {timeLeft !== null ? formatTime(timeLeft) : "--:--"} {"c\u00f2n l\u1ea1i"}
+                </span>
               </div>
 
               <button
                 type="button"
                 onClick={handleSubmit}
                 disabled={submitting || answeredCount === 0}
-                className={`flex h-12 w-full items-center justify-center gap-2 rounded-2xl border-[3px] border-black px-4 text-sm font-black transition-all duration-300 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none sm:h-14 sm:max-w-[280px] sm:gap-3 sm:px-8 sm:text-base md:justify-self-end ${
+                className={`flex h-12 w-full items-center justify-center gap-2 rounded-2xl border-[3px] border-black px-4 text-sm font-black transition-all duration-300 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none sm:h-14 sm:min-w-[240px] sm:max-w-[280px] sm:justify-self-end sm:gap-3 sm:px-8 sm:text-base ${
                   submitting || answeredCount === 0
                     ? "bg-slate-100 text-slate-400 cursor-not-allowed border-slate-300"
                     : "bg-brand-primary text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
                 }`}
               >
-                {submitting ? "?ang ch?m ?i?m..." : "N?p b?i v? ho?n t?t"}
+                {submitting ? "\u0110ang ch\u1ea5m \u0111i\u1ec3m..." : "N\u1ed9p b\u00e0i v\u00e0 ho\u00e0n t\u1ea5t"}
                 {!submitting && <ChevronRight size={20} />}
               </button>
             </div>
