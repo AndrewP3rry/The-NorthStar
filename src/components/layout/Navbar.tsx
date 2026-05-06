@@ -8,11 +8,43 @@ import { usePathname } from "next/navigation";
 import { Compass, LogIn, User } from "lucide-react";
 import { getSupabaseBrowser } from "@/lib/supabase/browser";
 
+type Language = "vi" | "en";
+
+const LANGUAGE_KEY = "northstar-language";
+
+const readLanguage = (): Language => {
+  if (typeof window === "undefined") return "vi";
+  return window.localStorage.getItem(LANGUAGE_KEY) === "en" ? "en" : "vi";
+};
+
 export function Navbar() {
   const pathname = usePathname();
   const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [language, setLanguage] = useState<Language>("vi");
 
   const isPracticeRoute = pathname?.startsWith("/practice");
+
+  useEffect(() => {
+    const syncLanguage = window.setTimeout(() => setLanguage(readLanguage()), 0);
+
+    const onLanguageChange = (event: Event) => {
+      const next = (event as CustomEvent<Language>).detail;
+      setLanguage(next === "en" ? "en" : "vi");
+    };
+
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === LANGUAGE_KEY) setLanguage(readLanguage());
+    };
+
+    window.addEventListener("northstar-language-change", onLanguageChange as EventListener);
+    window.addEventListener("storage", onStorage);
+
+    return () => {
+      window.clearTimeout(syncLanguage);
+      window.removeEventListener("northstar-language-change", onLanguageChange as EventListener);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
 
   useEffect(() => {
     const sb = getSupabaseBrowser();
@@ -26,6 +58,13 @@ export function Navbar() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const toggleLanguage = () => {
+    const next: Language = language === "vi" ? "en" : "vi";
+    window.localStorage.setItem(LANGUAGE_KEY, next);
+    setLanguage(next);
+    window.dispatchEvent(new CustomEvent<Language>("northstar-language-change", { detail: next }));
+  };
 
   const handleLogin = async () => {
     const sb = getSupabaseBrowser();
@@ -60,10 +99,15 @@ export function Navbar() {
           </span>
         </Link>
 
-        <div className="flex items-center gap-3">
-          <Link href="/practice" className="hidden text-sm font-bold text-black transition-colors hover:text-brand-primary md:block">
-            Luyện tập
-          </Link>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={toggleLanguage}
+            aria-label={language === "vi" ? "Switch to English" : "Chuyển sang tiếng Việt"}
+            className="rounded-full border-[2px] border-black bg-white px-3 py-1.5 text-xs font-extrabold text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
+          >
+            {language === "vi" ? "EN" : "VI"}
+          </button>
 
           {user ? (
             <div className="flex items-center gap-2">
@@ -77,7 +121,7 @@ export function Navbar() {
                 )}
               </div>
               <button onClick={handleLogout} className="text-xs font-bold text-slate-500 transition-colors hover:text-red-500">
-                Đăng xuất
+                {language === "vi" ? "Đăng xuất" : "Sign Out"}
               </button>
             </div>
           ) : (
@@ -86,7 +130,7 @@ export function Navbar() {
               className="flex items-center gap-1.5 rounded-full border-[2px] border-black bg-brand-primary px-4 py-1.5 text-xs font-extrabold text-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-none"
             >
               <LogIn size={14} />
-              Đăng nhập Google
+              {language === "vi" ? "Đăng Nhập" : "Sign In"}
             </button>
           )}
         </div>
