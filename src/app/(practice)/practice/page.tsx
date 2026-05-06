@@ -583,36 +583,40 @@ function PracticePageContent() {
 
       {/* Sticky submit bar */}
       <div className="fixed bottom-0 left-0 right-0 z-40 px-4 py-2 bg-gradient-to-t from-white via-white/80 to-transparent sm:py-3">
-        <div className="mx-auto max-w-6xl flex justify-end">
-          <div className="w-full lg:w-[calc(100%-19.5rem)]">
-            <div className="rounded-3xl border-[3px] border-black bg-white p-3 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] flex items-center gap-3 sm:p-4">
-              <div className="flex-1 flex items-center gap-4 px-1 sm:px-2">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Trạng thái</span>
-                  <span className="text-sm font-black text-black">
-                    {answeredCount === questions.length ? "✨ Sẵn sàng nộp bài!" : `Đã làm ${answeredCount}/${questions.length} câu`}
-                  </span>
-                </div>
-                <div className="h-8 w-[2px] bg-black/10 hidden md:block" />
-                <div className="hidden md:flex flex-col">
-                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Thời gian</span>
-                  <span className={`text-sm font-black ${timeLeft !== null && timeLeft <= 120 ? "text-rose-500" : "text-black"}`}>
-                    {timeLeft !== null ? formatTime(timeLeft) : "--:--"} còn lại
+        <div className="mx-auto w-full max-w-6xl">
+          <div className="rounded-3xl border-[3px] border-black bg-white p-3 shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] sm:p-4">
+            <div className="grid items-center gap-3 md:grid-cols-[1fr_auto_1fr]">
+              <div className="flex items-center justify-start gap-4 px-1 sm:px-2">
+                <div className="flex min-w-0 flex-col">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Tr?ng th?i</span>
+                  <span className="truncate text-sm font-black text-black">
+                    {answeredCount === questions.length ? "? S?n s?ng n?p b?i!" : `?? l?m ${answeredCount}/${questions.length} c?u`}
                   </span>
                 </div>
               </div>
-              
+
+              <div className="hidden h-9 w-[2px] bg-black/10 md:block" />
+
+              <div className="hidden items-center justify-start gap-4 px-1 sm:px-2 md:flex">
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Th?i gian</span>
+                  <span className={`text-sm font-black ${timeLeft !== null && timeLeft <= 120 ? "text-rose-500" : "text-black"}`}>
+                    {timeLeft !== null ? formatTime(timeLeft) : "--:--"} c?n l?i
+                  </span>
+                </div>
+              </div>
+
               <button
                 type="button"
                 onClick={handleSubmit}
                 disabled={submitting || answeredCount === 0}
-                className={`flex h-12 w-auto min-w-[168px] items-center justify-center gap-2 rounded-2xl border-[3px] border-black px-4 text-sm font-black transition-all duration-300 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none sm:h-14 sm:min-w-[240px] sm:gap-3 sm:px-8 sm:text-base ${
+                className={`flex h-12 w-full items-center justify-center gap-2 rounded-2xl border-[3px] border-black px-4 text-sm font-black transition-all duration-300 active:translate-x-[2px] active:translate-y-[2px] active:shadow-none sm:h-14 sm:max-w-[280px] sm:gap-3 sm:px-8 sm:text-base md:justify-self-end ${
                   submitting || answeredCount === 0
                     ? "bg-slate-100 text-slate-400 cursor-not-allowed border-slate-300"
                     : "bg-brand-primary text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]"
                 }`}
               >
-                {submitting ? "Đang chấm điểm..." : "Nộp bài và hoàn tất"}
+                {submitting ? "?ang ch?m ?i?m..." : "N?p b?i v? ho?n t?t"}
                 {!submitting && <ChevronRight size={20} />}
               </button>
             </div>
