@@ -6,6 +6,7 @@ import { supabaseAnonServer } from "@/lib/supabase/server";
 type LoginPayload = {
   email?: string;
   password?: string;
+  rememberMe?: boolean;
 };
 
 export async function POST(request: Request) {
@@ -30,6 +31,7 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as LoginPayload | null;
   const email = body?.email?.trim().toLowerCase() ?? "";
   const password = body?.password ?? "";
+  const rememberMe = body?.rememberMe !== false;
 
   if (!email || !password) {
     return NextResponse.json({ ok: false, error: "Thiếu email hoặc password." }, { status: 400 });
@@ -77,7 +79,8 @@ export async function POST(request: Request) {
   };
 
   const response = NextResponse.json({ ok: true, user });
-  response.cookies.set(APP_SESSION_COOKIE, createSessionToken(user), appSessionCookieOptions);
+  const ttl = rememberMe ? 60 * 60 * 24 * 30 : 60 * 60 * 24;
+  response.cookies.set(APP_SESSION_COOKIE, createSessionToken(user, ttl), appSessionCookieOptions(rememberMe));
   return response;
 }
 

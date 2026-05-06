@@ -38,7 +38,7 @@ function finishAuth(request: Request, user: AppUser) {
   const acceptsJson = request.headers.get("accept")?.includes("application/json");
   const response = acceptsJson ? NextResponse.json({ ok: true, user }) : NextResponse.redirect(new URL("/", request.url));
 
-  response.cookies.set(APP_SESSION_COOKIE, createSessionToken(user), appSessionCookieOptions);
+  response.cookies.set(APP_SESSION_COOKIE, createSessionToken(user), appSessionCookieOptions(true));
   return response;
 }
 

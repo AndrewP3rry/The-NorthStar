@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
           email: data.user.email,
           name: username ?? data.user.email,
         }),
-        appSessionCookieOptions
+        appSessionCookieOptions(true)
       );
       return response;
     }

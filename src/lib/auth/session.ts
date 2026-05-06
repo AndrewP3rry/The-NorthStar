@@ -14,6 +14,7 @@ type SessionPayload = AppUser & {
 
 export const APP_SESSION_COOKIE = "northstar_session";
 const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
+const SESSION_SHORT_MAX_AGE_SECONDS = 60 * 60 * 24;
 
 function base64UrlEncode(input: string) {
   return Buffer.from(input, "utf8").toString("base64url");
@@ -36,10 +37,10 @@ export function uuidFromGoogleSub(sub: string) {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-${((parseInt(hex.slice(16, 18), 16) & 0x3f) | 0x80).toString(16)}${hex.slice(18, 20)}-${hex.slice(20, 32)}`;
 }
 
-export function createSessionToken(user: AppUser) {
+export function createSessionToken(user: AppUser, maxAgeSeconds = SESSION_MAX_AGE_SECONDS) {
   const payload: SessionPayload = {
     ...user,
-    exp: Math.floor(Date.now() / 1000) + SESSION_MAX_AGE_SECONDS,
+    exp: Math.floor(Date.now() / 1000) + maxAgeSeconds,
   };
   const encodedPayload = base64UrlEncode(JSON.stringify(payload));
   return `${encodedPayload}.${signPayload(encodedPayload)}`;
@@ -77,10 +78,12 @@ export async function getCurrentUser() {
   return parseSessionToken(cookieStore.get(APP_SESSION_COOKIE)?.value);
 }
 
-export const appSessionCookieOptions = {
-  httpOnly: true,
-  sameSite: "lax" as const,
-  secure: process.env.NODE_ENV === "production",
-  path: "/",
-  maxAge: SESSION_MAX_AGE_SECONDS,
-};
+export function appSessionCookieOptions(rememberMe = true) {
+  return {
+    httpOnly: true,
+    sameSite: "lax" as const,
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: rememberMe ? SESSION_MAX_AGE_SECONDS : SESSION_SHORT_MAX_AGE_SECONDS,
+  };
+}

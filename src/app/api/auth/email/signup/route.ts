@@ -97,7 +97,7 @@ export async function POST(request: Request) {
     return NextResponse.json({
       ok: true,
       requiresVerification: true,
-      message: "Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản.",
+      message: "Đăng ký bước 1 thành công. Vui lòng nhập mã xác thực đã gửi tới email.",
     });
   } catch {
     return NextResponse.json({ ok: false, error: "Đăng ký thất bại do lỗi hệ thống. Vui lòng thử lại." }, { status: 500 });
