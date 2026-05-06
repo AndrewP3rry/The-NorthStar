@@ -59,12 +59,20 @@ function mapQuestion(q: LocalQuestion) {
 }
 
 async function readLocalBatch() {
-  try {
-    const filePath = path.join(process.cwd(), ".tmp", "pipeline", "published_batch.json");
-    return JSON.parse(await readFile(filePath, "utf8")) as LocalBatch;
-  } catch {
-    return null;
+  const candidates = [
+    path.join(process.cwd(), ".tmp", "pipeline", "published_batch.json"),
+    path.join(process.cwd(), "data", "published_batch.json"),
+  ];
+
+  for (const filePath of candidates) {
+    try {
+      return JSON.parse(await readFile(filePath, "utf8")) as LocalBatch;
+    } catch {
+      // Try the next source. Vercel does not include local .tmp files.
+    }
   }
+
+  return null;
 }
 
 export async function GET(request: Request) {
