@@ -10,7 +10,7 @@ type LoginPayload = {
 
 export async function POST(request: Request) {
   if (!supabaseAnonServer) {
-    return NextResponse.json({ ok: false, error: "Thi?u c?u hình Supabase auth." }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Thiếu cấu hình Supabase auth." }, { status: 500 });
   }
 
   const body = (await request.json().catch(() => null)) as LoginPayload | null;
@@ -18,29 +18,33 @@ export async function POST(request: Request) {
   const password = body?.password ?? "";
 
   if (!email || !password) {
-    return NextResponse.json({ ok: false, error: "Thi?u email ho?c password." }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "Thiếu email hoặc password." }, { status: 400 });
   }
 
   const { data, error } = await supabaseAnonServer.auth.signInWithPassword({ email, password });
 
   if (error || !data.user) {
-    return NextResponse.json({ ok: false, error: error?.message ?? "Ðang nh?p th?t b?i." }, { status: 401 });
+    return NextResponse.json({ ok: false, error: error?.message ?? "Đăng nhập thất bại." }, { status: 401 });
   }
 
   const username = typeof data.user.user_metadata?.username === "string" ? data.user.user_metadata.username : null;
   const displayName = username && username.trim().length > 0 ? username : data.user.email ?? email;
 
-  await prisma.user.upsert({
-    where: { email: data.user.email ?? email },
-    update: {
-      displayName,
-    },
-    create: {
-      id: data.user.id,
-      email: data.user.email ?? email,
-      displayName,
-    },
-  });
+  try {
+    await prisma.user.upsert({
+      where: { email: data.user.email ?? email },
+      update: {
+        displayName,
+      },
+      create: {
+        id: data.user.id,
+        email: data.user.email ?? email,
+        displayName,
+      },
+    });
+  } catch {
+    // Prisma sync phụ thất bại không được chặn đăng nhập thật.
+  }
 
   const user = {
     id: data.user.id,

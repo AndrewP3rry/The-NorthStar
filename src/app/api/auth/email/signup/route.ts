@@ -18,53 +18,65 @@ function validateInput(email: string, username: string, password: string) {
 }
 
 export async function POST(request: Request) {
-  if (!supabaseAnonServer) {
-    return NextResponse.json({ ok: false, error: "Thiếu cấu hình Supabase auth." }, { status: 500 });
-  }
+  try {
+    if (!supabaseAnonServer) {
+      return NextResponse.json({ ok: false, error: "Thiếu cấu hình Supabase auth." }, { status: 500 });
+    }
 
-  const body = (await request.json().catch(() => null)) as SignUpPayload | null;
-  const email = body?.email?.trim().toLowerCase() ?? "";
-  const username = body?.username?.trim() ?? "";
-  const password = body?.password ?? "";
+    const body = (await request.json().catch(() => null)) as SignUpPayload | null;
+    const email = body?.email?.trim().toLowerCase() ?? "";
+    const username = body?.username?.trim() ?? "";
+    const password = body?.password ?? "";
 
-  const validationError = validateInput(email, username, password);
-  if (validationError) {
-    return NextResponse.json({ ok: false, error: validationError }, { status: 400 });
-  }
+    const validationError = validateInput(email, username, password);
+    if (validationError) {
+      return NextResponse.json({ ok: false, error: validationError }, { status: 400 });
+    }
 
-  const existingEmail = await prisma.user.findUnique({ where: { email } });
-  if (existingEmail) {
-    return NextResponse.json({ ok: false, error: "Email đã tồn tại." }, { status: 409 });
-  }
+    try {
+      const existingEmail = await prisma.user.findUnique({ where: { email } });
+      if (existingEmail) {
+        return NextResponse.json({ ok: false, error: "Email đã tồn tại." }, { status: 409 });
+      }
 
-  const existingUsername = await prisma.user.findFirst({
-    where: { displayName: { equals: username, mode: "insensitive" } },
-    select: { id: true },
-  });
-  if (existingUsername) {
-    return NextResponse.json({ ok: false, error: "Username đã tồn tại." }, { status: 409 });
-  }
+      const existingUsername = await prisma.user.findFirst({
+        where: { displayName: { equals: username, mode: "insensitive" } },
+        select: { id: true },
+      });
+      if (existingUsername) {
+        return NextResponse.json({ ok: false, error: "Username đã tồn tại." }, { status: 409 });
+      }
+    } catch {
+      // DB phụ có thể không sẵn sàng trên một số môi trường; không chặn luồng signup.
+    }
 
-  const origin = new URL(request.url).origin;
-  const { error } = await supabaseAnonServer.auth.signUp({
-    email,
-    password,
-    options: {
-      emailRedirectTo: `${origin}/auth/callback?next=/`,
-      data: {
-        username,
+    const origin = new URL(request.url).origin;
+    const { error } = await supabaseAnonServer.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${origin}/auth/callback?next=/`,
+        data: {
+          username,
+        },
       },
-    },
-  });
+    });
 
-  if (error) {
-    return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+    if (error) {
+      const message = error.message.toLowerCase();
+      if (message.includes("already registered") || message.includes("already exists")) {
+        return NextResponse.json({ ok: false, error: "Email đã tồn tại." }, { status: 409 });
+      }
+      return NextResponse.json({ ok: false, error: `Đăng ký thất bại: ${error.message}` }, { status: 400 });
+    }
+
+    return NextResponse.json({
+      ok: true,
+      requiresVerification: true,
+      message: "Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản.",
+    });
+  } catch {
+    return NextResponse.json({ ok: false, error: "Đăng ký thất bại do lỗi hệ thống. Vui lòng thử lại." }, { status: 500 });
   }
-
-  return NextResponse.json({
-    ok: true,
-    requiresVerification: true,
-    message: "Đăng ký thành công. Vui lòng kiểm tra email để xác thực tài khoản.",
-  });
 }
 

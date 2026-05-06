@@ -22,17 +22,21 @@ export async function GET(request: NextRequest) {
           ? data.user.user_metadata.username.trim()
           : null;
 
-      await prisma.user.upsert({
-        where: { email: data.user.email },
-        update: {
-          displayName: username ?? data.user.email,
-        },
-        create: {
-          id: data.user.id,
-          email: data.user.email,
-          displayName: username ?? data.user.email,
-        },
-      });
+      try {
+        await prisma.user.upsert({
+          where: { email: data.user.email },
+          update: {
+            displayName: username ?? data.user.email,
+          },
+          create: {
+            id: data.user.id,
+            email: data.user.email,
+            displayName: username ?? data.user.email,
+          },
+        });
+      } catch {
+        // Prisma sync phụ thất bại không chặn verify + auto login.
+      }
 
       const response = NextResponse.redirect(`${origin}${next}`);
       response.cookies.set(
