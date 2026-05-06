@@ -1,0 +1,65 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f8f9fa;
+  --foreground: #2d2d2d;
+  --primary: #6d5d6e;
+  --secondary: #d1f2e5;
+  --accent: #fef6e4;
+  --peach: #f9e2d2;
+  --border: #000000;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-brand-primary: var(--primary);
+  --color-brand-secondary: var(--secondary);
+  --color-brand-accent: var(--accent);
+  --color-brand-peach: var(--peach);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Inter", "Segoe UI", "Aptos", "SF Pro Text", "Helvetica Neue", sans-serif;
+  background-image: radial-gradient(#d1d5db 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Custom Utilities for the Reference Style */
+.hand-drawn-card {
+  @apply rounded-[2rem] border-[3px] border-black bg-white shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all duration-300;
+}
+
+.hand-drawn-card:hover {
+  @apply shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] translate-x-[4px] translate-y-[4px];
+}
+
+.hand-drawn-button {
+  @apply rounded-full border-[2.5px] border-black px-6 py-3 font-bold transition-all duration-300 flex items-center justify-center gap-2;
+}
+
+.hand-drawn-button-primary {
+  @apply bg-brand-primary text-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+}
+
+.hand-drawn-button-primary:hover {
+  @apply shadow-none translate-x-[4px] translate-y-[4px];
+}
+
+.hand-drawn-button-secondary {
+  @apply bg-white text-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)];
+}
+
+.hand-drawn-button-secondary:hover {
+  @apply shadow-none translate-x-[4px] translate-y-[4px];
+}
+
+.glass-pill {
+  @apply bg-white/40 backdrop-blur-md border border-white/50 rounded-full px-4 py-1.5 text-sm font-medium;
+}
