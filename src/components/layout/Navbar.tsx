@@ -47,7 +47,7 @@ function loadGoogleScript() {
     const existing = document.querySelector<HTMLScriptElement>('script[src="https://accounts.google.com/gsi/client"]');
     if (existing) {
       existing.addEventListener("load", () => resolve(), { once: true });
-      existing.addEventListener("error", () => reject(new Error("Không t?i du?c Google Sign-In.")), { once: true });
+      existing.addEventListener("error", () => reject(new Error("Không tải được Google Sign-In.")), { once: true });
       return;
     }
 
@@ -56,7 +56,7 @@ function loadGoogleScript() {
     script.async = true;
     script.defer = true;
     script.onload = () => resolve();
-    script.onerror = () => reject(new Error("Không t?i du?c Google Sign-In."));
+    script.onerror = () => reject(new Error("Không tải được Google Sign-In."));
     document.head.appendChild(script);
   });
 }
@@ -116,7 +116,7 @@ export function Navbar() {
       .then(() => {
         if (cancelled || !googleButtonRef.current || !window.google?.accounts?.id) return;
         if (!googleClientId) {
-          setAuthError("Thi?u NEXT_PUBLIC_GOOGLE_CLIENT_ID trên Vercel.");
+          setAuthError("Thiếu NEXT_PUBLIC_GOOGLE_CLIENT_ID trên Vercel.");
           return;
         }
 
@@ -174,12 +174,12 @@ export function Navbar() {
       const data = (await response.json().catch(() => null)) as { ok?: boolean; error?: string; message?: string; user?: AppUser } | null;
 
       if (!response.ok || !data?.ok) {
-        setAuthError(data?.error ?? (language === "vi" ? "Xác th?c th?t b?i." : "Authentication failed."));
+        setAuthError(data?.error ?? (language === "vi" ? "Xác thực thất bại." : "Authentication failed."));
         return;
       }
 
       if (authMode === "signup") {
-        setAuthMessage(data.message ?? (language === "vi" ? "Vui lòng ki?m tra email d? xác th?c tài kho?n." : "Please verify your email."));
+        setAuthMessage(data.message ?? (language === "vi" ? "Vui lòng kiểm tra email để xác thực tài khoản." : "Please verify your email."));
         return;
       }
 
@@ -189,7 +189,7 @@ export function Navbar() {
       setShowAuthModal(false);
       window.dispatchEvent(new CustomEvent("northstar-auth-change", { detail: data.user ?? null }));
     } catch {
-      setAuthError(language === "vi" ? "Không th? k?t n?i d?n máy ch?." : "Could not connect to server.");
+      setAuthError(language === "vi" ? "Không thể kết nối đến máy chủ." : "Could not connect to server.");
     } finally {
       setSubmitting(false);
     }
@@ -214,10 +214,10 @@ export function Navbar() {
             <button
               type="button"
               onClick={toggleLanguage}
-              aria-label={language === "vi" ? "Switch to English" : "Chuy?n sang ti?ng Vi?t"}
+              aria-label={language === "vi" ? "Chuyển sang tiếng Anh" : "Switch to Vietnamese"}
               className="rounded-full border-[2px] border-black bg-white px-3 py-1.5 text-xs font-extrabold text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none"
             >
-              {language === "vi" ? "EN" : "VI"}
+              {language === "vi" ? "VI" : "EN"}
             </button>
 
             {user ? (
@@ -232,7 +232,7 @@ export function Navbar() {
                   )}
                 </div>
                 <button onClick={handleLogout} className="text-xs font-bold text-slate-500 transition-colors hover:text-red-500">
-                  {language === "vi" ? "Ðang xu?t" : "Sign Out"}
+                  {language === "vi" ? "Đăng xuất" : "Sign Out"}
                 </button>
               </div>
             ) : (
@@ -244,7 +244,7 @@ export function Navbar() {
                 className="flex items-center gap-1.5 rounded-full border-[2px] border-black bg-brand-primary px-4 py-1.5 text-xs font-extrabold text-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all duration-300 hover:translate-x-[3px] hover:translate-y-[3px] hover:shadow-none"
               >
                 <LogIn size={14} />
-                {language === "vi" ? "Ðang Nh?p" : "Sign In"}
+                {language === "vi" ? "Đăng nhập" : "Sign In"}
               </button>
             )}
           </div>
@@ -254,7 +254,7 @@ export function Navbar() {
       {showAuthModal && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/35 px-4 backdrop-blur-sm">
           <section className="hand-drawn-card w-full max-w-sm bg-white p-7 text-center">
-            <h2 className="text-2xl font-black text-black">{language === "vi" ? "Tài Kho?n" : "Account"}</h2>
+            <h2 className="text-2xl font-black text-black">{language === "vi" ? "Tài khoản" : "Account"}</h2>
             <div className="mt-4 grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -264,7 +264,7 @@ export function Navbar() {
                 }}
                 className={`rounded-full border-[2px] border-black px-3 py-2 text-sm font-extrabold ${authMode === "signin" ? "bg-brand-primary text-white" : "bg-white text-black"}`}
               >
-                {language === "vi" ? "Ðang nh?p" : "Sign in"}
+                {language === "vi" ? "Đăng nhập" : "Sign in"}
               </button>
               <button
                 type="button"
@@ -274,7 +274,7 @@ export function Navbar() {
                 }}
                 className={`rounded-full border-[2px] border-black px-3 py-2 text-sm font-extrabold ${authMode === "signup" ? "bg-brand-primary text-white" : "bg-white text-black"}`}
               >
-                {language === "vi" ? "Ðang ký" : "Sign up"}
+                {language === "vi" ? "Đăng ký" : "Sign up"}
               </button>
             </div>
 
@@ -303,7 +303,7 @@ export function Navbar() {
                 className="w-full rounded-2xl border-[2px] border-black px-3 py-2 text-sm outline-none"
               />
               {authMode === "signup" && (
-                <p className="text-xs text-slate-500">{language === "vi" ? "Password: 8-12 ký t?, có ít nh?t 1 ch? in hoa." : "Password: 8-12 chars, at least 1 uppercase letter."}</p>
+                <p className="text-xs text-slate-500">{language === "vi" ? "Password: 8-12 ký tự, có ít nhất 1 chữ in hoa." : "Password: 8-12 chars, at least 1 uppercase letter."}</p>
               )}
               <button
                 type="button"
@@ -313,26 +313,26 @@ export function Navbar() {
               >
                 {submitting
                   ? language === "vi"
-                    ? "Ðang x? lý..."
+                    ? "Đang xử lý..."
                     : "Working..."
                   : authMode === "signup"
                     ? language === "vi"
-                      ? "T?o tài kho?n"
+                      ? "Tạo tài khoản"
                       : "Create account"
                     : language === "vi"
-                      ? "Ðang nh?p"
+                      ? "Đăng nhập"
                       : "Sign in"}
               </button>
             </div>
 
-            <p className="my-4 text-xs font-bold text-slate-400">{language === "vi" ? "ho?c" : "or"}</p>
+            <p className="my-4 text-xs font-bold text-slate-400">{language === "vi" ? "hoặc" : "or"}</p>
             <div className="flex justify-center" ref={googleButtonRef} />
 
             {authError && <p className="mt-4 rounded-2xl border border-rose-300 bg-rose-50 px-3 py-2 text-sm font-bold text-rose-600">{authError}</p>}
             {authMessage && <p className="mt-4 rounded-2xl border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm font-bold text-emerald-700">{authMessage}</p>}
 
             <button type="button" onClick={() => setShowAuthModal(false)} className="mt-5 text-sm font-bold text-slate-500 hover:text-black">
-              {language === "vi" ? "Ðóng" : "Close"}
+              {language === "vi" ? "Đóng" : "Close"}
             </button>
           </section>
         </div>
