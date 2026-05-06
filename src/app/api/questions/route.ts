@@ -1,30 +1,6 @@
 import { NextResponse } from "next/server";
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 import { createHash } from "node:crypto";
-
-type Topic = "numerical" | "verbal" | "logical" | "data_interpretation" | "visual";
-type Difficulty = "easy" | "medium" | "hard";
-
-type LocalQuestion = {
-  id: string;
-  topic: Topic;
-  difficulty: Difficulty;
-  stem: string;
-  optionA: string;
-  optionB: string;
-  optionC: string;
-  optionD: string;
-  estimatedTimeSec: number;
-  questionType?: "text" | "image";
-  imageSvg?: string | null;
-  patternId?: string;
-};
-
-type LocalBatch = {
-  batchId: string;
-  questions: LocalQuestion[];
-};
+import { fallbackQuestionBatch, mapBankQuestion, type Topic } from "@/lib/question-bank";
 
 function hashInt(input: string) {
   return Number.parseInt(createHash("sha256").update(input).digest("hex").slice(0, 12), 16);
@@ -39,54 +15,17 @@ function shuffle<T>(arr: T[], seed: string) {
   return out;
 }
 
-function mapQuestion(q: LocalQuestion) {
-  return {
-    id: q.id,
-    topic: q.topic,
-    difficulty: q.difficulty,
-    stem: q.stem,
-    options: [
-      { key: "A", text: q.optionA },
-      { key: "B", text: q.optionB },
-      { key: "C", text: q.optionC },
-      { key: "D", text: q.optionD },
-    ],
-    estimatedTimeSec: q.estimatedTimeSec,
-    questionType: q.questionType ?? "text",
-    imageSvg: q.imageSvg ?? null,
-    patternId: q.patternId,
-  };
-}
-
-async function readLocalBatch() {
-  const candidates = [
-    path.join(process.cwd(), ".tmp", "pipeline", "published_batch.json"),
-    path.join(process.cwd(), "data", "published_batch.json"),
-  ];
-
-  for (const filePath of candidates) {
-    try {
-      return JSON.parse(await readFile(filePath, "utf8")) as LocalBatch;
-    } catch {
-      // Try the next source. Vercel does not include local .tmp files.
-    }
-  }
-
-  return null;
-}
-
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const topic = searchParams.get("topic") as Topic | null;
   const limit = parseInt(searchParams.get("limit") ?? "15");
   const random = searchParams.get("random") === "true";
 
-  const local = await readLocalBatch();
-  if (!local) {
+  if (!fallbackQuestionBatch.questions.length) {
     return NextResponse.json({ error: "Question bank not found" }, { status: 404 });
   }
 
-  let pool = local.questions;
+  let pool = fallbackQuestionBatch.questions;
   if (topic) {
     pool = pool.filter((q) => q.topic === topic);
   }
@@ -101,7 +40,7 @@ export async function GET(request: Request) {
     selected = shuffle(pool, seed);
   }
 
-  const questions = selected.slice(0, limit).map(mapQuestion);
+  const questions = selected.slice(0, limit).map(mapBankQuestion);
 
   return NextResponse.json({
     questions,

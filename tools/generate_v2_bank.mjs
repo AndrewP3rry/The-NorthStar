@@ -35,7 +35,6 @@ function generateQuestions() {
         
         if (topic === 'NUMERICAL') {
           const val1 = Math.floor(Math.random() * 100) + 10;
-          const val2 = Math.floor(Math.random() * 50) + 5;
           if (sub === 'Arithmetic') {
             stem += `Một cửa hàng nhập hàng với giá ${val1}0k, bán lãi ${difficulty === 'HARD' ? 15 : 10}%. Giá bán là bao nhiêu?`;
             explanation = `Giá bán = Vốn + Lãi = ${val1}0 + ${val1}0 * ${difficulty === 'HARD' ? 0.15 : 0.1}`;

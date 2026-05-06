@@ -1,33 +1,9 @@
 import { NextResponse } from "next/server";
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 import { createHash } from "node:crypto";
 import { prisma } from "@/lib/db/prisma";
 import { mockDailyQuestions } from "@/lib/db/mock-data";
 import { getLocalStreak } from "@/lib/local-store/history";
-
-type Topic = "numerical" | "verbal" | "logical" | "data_interpretation" | "visual";
-type Difficulty = "easy" | "medium" | "hard";
-
-type LocalQuestion = {
-  id: string;
-  topic: Topic;
-  difficulty: Difficulty;
-  stem: string;
-  optionA: string;
-  optionB: string;
-  optionC: string;
-  optionD: string;
-  estimatedTimeSec: number;
-  questionType?: "text" | "image";
-  imageSvg?: string | null;
-  patternId?: string;
-};
-
-type LocalBatch = {
-  batchId: string;
-  questions: LocalQuestion[];
-};
+import { fallbackQuestionBatch, mapBankQuestion, type BankQuestion, type Difficulty, type Topic } from "@/lib/question-bank";
 
 function hashInt(input: string) {
   return Number.parseInt(createHash("sha256").update(input).digest("hex").slice(0, 12), 16);
@@ -48,9 +24,9 @@ function desiredByStreak(streak: number): Record<Difficulty, number> {
   return { easy: 1, medium: 2, hard: 2 };
 }
 
-function pickByDifficulty(pool: LocalQuestion[], streak: number, seed: string) {
+function pickByDifficulty(pool: BankQuestion[], streak: number, seed: string) {
   const need = desiredByStreak(streak);
-  const picked: LocalQuestion[] = [];
+  const picked: BankQuestion[] = [];
 
   (Object.keys(need) as Difficulty[]).forEach((d) => {
     const candidates = shuffle(pool.filter((q) => q.difficulty === d), `${seed}-${d}`);
@@ -65,60 +41,28 @@ function pickByDifficulty(pool: LocalQuestion[], streak: number, seed: string) {
   return picked.slice(0, 5);
 }
 
-function mapQuestion(q: LocalQuestion) {
-  return {
-    id: q.id,
-    topic: q.topic,
-    difficulty: q.difficulty,
-    stem: q.stem,
-    options: [
-      { key: "A", text: q.optionA },
-      { key: "B", text: q.optionB },
-      { key: "C", text: q.optionC },
-      { key: "D", text: q.optionD },
-    ],
-    estimatedTimeSec: q.estimatedTimeSec,
-    questionType: q.questionType ?? "text",
-    imageSvg: q.imageSvg ?? null,
-    patternId: q.patternId,
-  };
-}
-
-async function readLocalBatch() {
-  const candidates = [
-    path.join(process.cwd(), ".tmp", "pipeline", "published_batch.json"),
-    path.join(process.cwd(), "data", "published_batch.json"),
-  ];
-
-  for (const filePath of candidates) {
-    try {
-      return JSON.parse(await readFile(filePath, "utf8")) as LocalBatch;
-    } catch {
-      // Try the next source. Vercel does not include local .tmp files.
-    }
-  }
-
-  return null;
-}
-
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get("userId") ?? "550e8400-e29b-41d4-a716-446655440000";
 
-  const local = await readLocalBatch();
-  if (local) {
-    const streak = await getLocalStreak(userId);
+  if (fallbackQuestionBatch.questions.length > 0) {
+    let streak = 0;
+    try {
+      streak = await getLocalStreak(userId);
+    } catch {
+      streak = 0;
+    }
     const topics: Topic[] = ["numerical", "verbal", "data_interpretation", "logical", "visual"];
     const byTopic = topics.flatMap((topic) => {
-      const pool = local.questions.filter((q) => q.topic === topic);
-      return pickByDifficulty(pool, streak, `${local.batchId}-${userId}-${topic}`);
+      const pool = fallbackQuestionBatch.questions.filter((q) => q.topic === topic);
+      return pickByDifficulty(pool, streak, `${fallbackQuestionBatch.batchId}-${userId}-${topic}`);
     });
 
-    const finalQuestions = shuffle(byTopic, `${local.batchId}-${userId}-final`).slice(0, 25).map(mapQuestion);
+    const finalQuestions = shuffle(byTopic, `${fallbackQuestionBatch.batchId}-${userId}-final`).slice(0, 25).map(mapBankQuestion);
 
     return NextResponse.json({
-      source: "pipeline-file",
-      batchId: local.batchId,
+      source: "bundled-bank",
+      batchId: fallbackQuestionBatch.batchId,
       targetCount: 25,
       streak,
       difficultyProfile: desiredByStreak(streak),

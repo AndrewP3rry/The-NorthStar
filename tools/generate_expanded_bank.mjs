@@ -153,8 +153,7 @@ function numerical(index, seed) {
     return item;
 }
 
-function verbal(index, seed) {
-    const n = (seed % 3);
+function verbal(index) {
     const list = [
         // 12: Tone analysis
         {
@@ -258,8 +257,7 @@ function verbal(index, seed) {
     return list[index - 12];
 }
 
-function dataInterpretation(index, seed) {
-    const n = (seed % 5);
+function dataInterpretation(index) {
     const list = [
         // 12: Pie chart 2 cấp
         {
@@ -363,8 +361,7 @@ function dataInterpretation(index, seed) {
     return list[index - 12];
 }
 
-function logical(index, seed) {
-    const n = (seed % 4);
+function logical(index) {
     const list = [
         // 12: Xếp hàng 5 người
         {
@@ -476,8 +473,7 @@ function logical(index, seed) {
     return item;
 }
 
-function visual(index, seed) {
-    const n = (seed % 4);
+function visual(index) {
     const list = [
         // 12: Quay 90 độ
         {
@@ -598,10 +594,10 @@ function buildQuestion(topic, patternIndex, daySeed) {
   const seed = (hashInt(`${daySeed}-${topic}-${patternIndex}`) % 70) + 1;
   let payload;
   if (topic === "numerical") payload = numerical(patternIndex, seed);
-  else if (topic === "verbal") payload = verbal(patternIndex, seed);
-  else if (topic === "data_interpretation") payload = dataInterpretation(patternIndex, seed);
-  else if (topic === "visual") payload = visual(patternIndex, seed);
-  else payload = logical(patternIndex, seed);
+  else if (topic === "verbal") payload = verbal(patternIndex);
+  else if (topic === "data_interpretation") payload = dataInterpretation(patternIndex);
+  else if (topic === "visual") payload = visual(patternIndex);
+  else payload = logical(patternIndex);
 
   return {
     question_id: randomUUID(),

@@ -46,52 +46,6 @@ function exp(a, b, c) {
   return `${a}. ${b}. ${c}.`;
 }
 
-function svgShape(seed) {
-  const x = 24 + (seed % 32);
-  const y = 24 + ((seed * 3) % 28);
-  return `<svg xmlns='http://www.w3.org/2000/svg' width='360' height='180'>
-  <rect x='10' y='10' width='340' height='160' fill='white' stroke='#CBD5E1' stroke-width='2'/>
-  <rect x='${x}' y='${y}' width='52' height='52' fill='#0EA5E9'/>
-  <circle cx='${x + 210}' cy='${y + 26}' r='18' fill='#1E3A8A'/>
-  <polygon points='${x + 148},${y + 62} ${x + 126},${y + 102} ${x + 170},${y + 102}' fill='#F97316'/>
-  <text x='20' y='152' font-size='13' fill='#0F172A'>Quan sát hình và chọn nhận định đúng.</text>
-</svg>`;
-}
-
-function svgMatrix(a, b, c, d) {
-  return `<svg xmlns='http://www.w3.org/2000/svg' width='340' height='220'>
-  <rect x='20' y='20' width='180' height='140' fill='white' stroke='#334155' stroke-width='2'/>
-  <line x1='80' y1='20' x2='80' y2='160' stroke='#334155'/>
-  <line x1='140' y1='20' x2='140' y2='160' stroke='#334155'/>
-  <line x1='20' y1='66' x2='200' y2='66' stroke='#334155'/>
-  <line x1='20' y1='112' x2='200' y2='112' stroke='#334155'/>
-  <text x='42' y='50' font-size='20'>${a}</text>
-  <text x='102' y='50' font-size='20'>${b}</text>
-  <text x='162' y='50' font-size='20'>?</text>
-  <text x='42' y='96' font-size='20'>${c}</text>
-  <text x='102' y='96' font-size='20'>?</text>
-  <text x='162' y='96' font-size='20'>${d}</text>
-  <text x='42' y='142' font-size='20'>?</text>
-  <text x='102' y='142' font-size='20'>${a + b}</text>
-  <text x='162' y='142' font-size='20'>${d + 2}</text>
-  <text x='20' y='195' font-size='13'>Tìm giá trị thiếu theo quy luật.</text>
-</svg>`;
-}
-
-function svgSet(seed) {
-  const n = 3 + (seed % 3);
-  return `<svg xmlns='http://www.w3.org/2000/svg' width='360' height='210'>
-  <rect x='20' y='20' width='130' height='130' fill='none' stroke='#0F766E' stroke-width='2'/>
-  <rect x='110' y='20' width='130' height='130' fill='none' stroke='#1D4ED8' stroke-width='2'/>
-  <text x='45' y='45' font-size='14'>Set A</text>
-  <text x='170' y='45' font-size='14'>Set B</text>
-  <circle cx='120' cy='85' r='35' fill='#0EA5E9' opacity='0.35'/>
-  <text x='42' y='82' font-size='13'>${n} tam giác</text>
-  <text x='160' y='82' font-size='13'>${n + 1} hình tròn</text>
-  <text x='20' y='185' font-size='13'>Figure mục tiêu thuộc set nào?</text>
-</svg>`;
-}
-
 function numerical(index, seed) {
   const n = (seed % 70) + 1;
   const base = 100000 + n * 7000;

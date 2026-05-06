@@ -24,7 +24,7 @@ function computeResult(
       questionId: answer.questionId,
       selectedOption: answer.selectedOption,
       correctOption: matched?.correctOption ?? null,
-      explanation: matched?.explanation ?? "Chưa có lời giải cho câu này.",
+      explanation: matched?.explanation ?? "Ch\u01b0a c\u00f3 l\u1eddi gi\u1ea3i cho c\u00e2u n\u00e0y.",
       topic: matched?.topic ?? "numerical",
       timeSpentSec: answer.timeSpentSec,
       isCorrect,
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: false,
-        error: "Payload không hợp lệ",
+        error: "Payload kh\u00f4ng h\u1ee3p l\u1ec7",
         details: parsed.error.flatten(),
       },
       { status: 400 }
@@ -123,16 +123,19 @@ export async function POST(request: Request) {
 
     const localId = randomUUID();
     const now = new Date().toISOString();
-
-    await appendLocalSession({
-      id: localId,
-      userId,
-      score: result.score,
-      correctCount: result.correctCount,
-      wrongCount: result.wrongCount,
-      startedAt: now,
-      endedAt: now,
-    });
+    try {
+      await appendLocalSession({
+        id: localId,
+        userId,
+        score: result.score,
+        correctCount: result.correctCount,
+        wrongCount: result.wrongCount,
+        startedAt: now,
+        endedAt: now,
+      });
+    } catch {
+      // Serverless deployments may not allow writing to the project directory.
+    }
 
     return NextResponse.json({
       ok: true,
@@ -146,7 +149,7 @@ export async function POST(request: Request) {
         topicBreakdown: result.topicBreakdown,
         answers: result.scoredAnswers,
       },
-      note: "DB chưa sẵn sàng, đã lưu lịch sử local trong .tmp/local-store/history.json",
+      note: "DB ch\u01b0a s\u1eb5n s\u00e0ng, \u0111\u00e3 ch\u1ea5m b\u1eb1ng b\u1ed9 c\u00e2u h\u1ecfi fallback.",
     });
   }
 }
