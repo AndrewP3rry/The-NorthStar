@@ -9,6 +9,20 @@ type LoginPayload = {
 };
 
 export async function POST(request: Request) {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  if (
+    process.env.NODE_ENV === "production" &&
+    (supabaseUrl.includes("localhost") || supabaseUrl.includes("127.0.0.1"))
+  ) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "Cấu hình Supabase trên production đang sai (URL đang trỏ localhost).",
+      },
+      { status: 500 }
+    );
+  }
+
   if (!supabaseAnonServer) {
     return NextResponse.json({ ok: false, error: "Thiếu cấu hình Supabase auth." }, { status: 500 });
   }
@@ -24,6 +38,16 @@ export async function POST(request: Request) {
   const { data, error } = await supabaseAnonServer.auth.signInWithPassword({ email, password });
 
   if (error || !data.user) {
+    if (error?.message?.toLowerCase().includes("fetch failed")) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error:
+            "Không kết nối được đến Supabase từ server deploy. Vui lòng kiểm tra lại NEXT_PUBLIC_SUPABASE_URL và NEXT_PUBLIC_SUPABASE_ANON_KEY trên Vercel.",
+        },
+        { status: 502 }
+      );
+    }
     return NextResponse.json({ ok: false, error: error?.message ?? "Đăng nhập thất bại." }, { status: 401 });
   }
 

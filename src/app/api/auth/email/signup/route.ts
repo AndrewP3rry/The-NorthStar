@@ -19,6 +19,20 @@ function validateInput(email: string, username: string, password: string) {
 
 export async function POST(request: Request) {
   try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+    if (
+      process.env.NODE_ENV === "production" &&
+      (supabaseUrl.includes("localhost") || supabaseUrl.includes("127.0.0.1"))
+    ) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Cấu hình Supabase trên production đang sai (URL đang trỏ localhost).",
+        },
+        { status: 500 }
+      );
+    }
+
     if (!supabaseAnonServer) {
       return NextResponse.json({ ok: false, error: "Thiếu cấu hình Supabase auth." }, { status: 500 });
     }
@@ -66,6 +80,16 @@ export async function POST(request: Request) {
       const message = error.message.toLowerCase();
       if (message.includes("already registered") || message.includes("already exists")) {
         return NextResponse.json({ ok: false, error: "Email đã tồn tại." }, { status: 409 });
+      }
+      if (message.includes("fetch failed")) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error:
+              "Không kết nối được đến Supabase từ server deploy. Vui lòng kiểm tra lại NEXT_PUBLIC_SUPABASE_URL và NEXT_PUBLIC_SUPABASE_ANON_KEY trên Vercel.",
+          },
+          { status: 502 }
+        );
       }
       return NextResponse.json({ ok: false, error: `Đăng ký thất bại: ${error.message}` }, { status: 400 });
     }
