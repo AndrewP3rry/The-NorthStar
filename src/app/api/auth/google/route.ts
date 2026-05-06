@@ -1,5 +1,6 @@
 ﻿import { NextResponse } from "next/server";
 import { APP_SESSION_COOKIE, appSessionCookieOptions, createSessionToken, uuidFromGoogleSub } from "@/lib/auth/session";
+import { prisma } from "@/lib/db/prisma";
 
 type GoogleTokenInfo = {
   aud?: string;
@@ -35,9 +36,7 @@ async function readCredential(request: Request) {
 
 function finishAuth(request: Request, user: AppUser) {
   const acceptsJson = request.headers.get("accept")?.includes("application/json");
-  const response = acceptsJson
-    ? NextResponse.json({ ok: true, user })
-    : NextResponse.redirect(new URL("/", request.url));
+  const response = acceptsJson ? NextResponse.json({ ok: true, user }) : NextResponse.redirect(new URL("/", request.url));
 
   response.cookies.set(APP_SESSION_COOKIE, createSessionToken(user), appSessionCookieOptions);
   return response;
@@ -45,13 +44,13 @@ function finishAuth(request: Request, user: AppUser) {
 
 export async function POST(request: Request) {
   if (!googleClientId) {
-    return NextResponse.json({ ok: false, error: "Thiếu NEXT_PUBLIC_GOOGLE_CLIENT_ID trên server." }, { status: 500 });
+    return NextResponse.json({ ok: false, error: "Thi?u NEXT_PUBLIC_GOOGLE_CLIENT_ID trên server." }, { status: 500 });
   }
 
   const credential = await readCredential(request);
 
   if (!credential) {
-    return NextResponse.json({ ok: false, error: "Thiếu Google credential." }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "Thi?u Google credential." }, { status: 400 });
   }
 
   const tokenInfoResponse = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(credential)}`, {
@@ -63,14 +62,14 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         ok: false,
-        error: tokenInfo?.error_description ?? tokenInfo?.error ?? "Google token không hợp lệ.",
+        error: tokenInfo?.error_description ?? tokenInfo?.error ?? "Google token không h?p l?.",
       },
       { status: 401 }
     );
   }
 
   if (!tokenInfo.email || tokenInfo.email_verified === false || tokenInfo.email_verified === "false") {
-    return NextResponse.json({ ok: false, error: "Google account chưa xác minh email." }, { status: 401 });
+    return NextResponse.json({ ok: false, error: "Google account chua xác minh email." }, { status: 401 });
   }
 
   const user = {
@@ -80,5 +79,18 @@ export async function POST(request: Request) {
     picture: tokenInfo.picture,
   };
 
+  await prisma.user.upsert({
+    where: { email: user.email },
+    update: {
+      displayName: user.name,
+    },
+    create: {
+      id: user.id,
+      email: user.email,
+      displayName: user.name,
+    },
+  });
+
   return finishAuth(request, user);
 }
+
