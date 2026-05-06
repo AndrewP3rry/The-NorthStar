@@ -14,14 +14,10 @@ type AppUser = {
   picture?: string;
 };
 
-type GoogleCredentialResponse = {
-  credential?: string;
-};
-
 type GoogleAccounts = {
   accounts: {
     id: {
-      initialize: (options: { client_id: string; callback: (response: GoogleCredentialResponse) => void }) => void;
+      initialize: (options: { client_id: string; ux_mode: "redirect"; login_uri: string }) => void;
       renderButton: (element: HTMLElement, options: Record<string, string | number | boolean>) => void;
     };
   };
@@ -121,28 +117,8 @@ export function Navbar() {
         googleButtonRef.current.innerHTML = "";
         window.google.accounts.id.initialize({
           client_id: googleClientId,
-          callback: async (response) => {
-            if (!response.credential) {
-              setAuthError("Google không trả về credential.");
-              return;
-            }
-
-            const authResponse = await fetch("/api/auth/google", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ credential: response.credential }),
-            });
-            const data = (await authResponse.json()) as { ok?: boolean; user?: AppUser; error?: string };
-
-            if (!authResponse.ok || !data.user) {
-              setAuthError(data.error ?? "Đăng nhập thất bại.");
-              return;
-            }
-
-            setUser(data.user);
-            setShowGoogleModal(false);
-            window.dispatchEvent(new CustomEvent("northstar-auth-change", { detail: data.user }));
-          },
+          ux_mode: "redirect",
+          login_uri: `${window.location.origin}/api/auth/google`,
         });
         window.google.accounts.id.renderButton(googleButtonRef.current, {
           theme: "outline",

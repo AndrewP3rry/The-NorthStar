@@ -12,15 +12,43 @@ type GoogleTokenInfo = {
   error_description?: string;
 };
 
+type AppUser = {
+  id: string;
+  email: string;
+  name: string;
+  picture?: string;
+};
+
 const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? process.env.GOOGLE_CLIENT_ID;
+
+async function readCredential(request: Request) {
+  const contentType = request.headers.get("content-type") ?? "";
+
+  if (contentType.includes("application/json")) {
+    const body = (await request.json().catch(() => null)) as { credential?: string } | null;
+    return body?.credential ?? null;
+  }
+
+  const form = await request.formData().catch(() => null);
+  return form?.get("credential")?.toString() ?? null;
+}
+
+function finishAuth(request: Request, user: AppUser) {
+  const acceptsJson = request.headers.get("accept")?.includes("application/json");
+  const response = acceptsJson
+    ? NextResponse.json({ ok: true, user })
+    : NextResponse.redirect(new URL("/", request.url));
+
+  response.cookies.set(APP_SESSION_COOKIE, createSessionToken(user), appSessionCookieOptions);
+  return response;
+}
 
 export async function POST(request: Request) {
   if (!googleClientId) {
     return NextResponse.json({ ok: false, error: "Thiếu NEXT_PUBLIC_GOOGLE_CLIENT_ID trên server." }, { status: 500 });
   }
 
-  const body = (await request.json().catch(() => null)) as { credential?: string } | null;
-  const credential = body?.credential;
+  const credential = await readCredential(request);
 
   if (!credential) {
     return NextResponse.json({ ok: false, error: "Thiếu Google credential." }, { status: 400 });
@@ -52,7 +80,5 @@ export async function POST(request: Request) {
     picture: tokenInfo.picture,
   };
 
-  const response = NextResponse.json({ ok: true, user });
-  response.cookies.set(APP_SESSION_COOKIE, createSessionToken(user), appSessionCookieOptions);
-  return response;
+  return finishAuth(request, user);
 }
