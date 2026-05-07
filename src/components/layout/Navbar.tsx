@@ -236,6 +236,33 @@ export function Navbar() {
     }
   };
 
+  const handlePasswordReset = async () => {
+    resetAuthState();
+    if (!email.trim()) {
+      setAuthError(language === "vi" ? "Nhập email trước để nhận link đặt lại mật khẩu." : "Enter your email first.");
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const response = await fetch("/api/auth/email/reset", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = (await response.json().catch(() => null)) as { ok?: boolean; error?: string; message?: string } | null;
+      if (!response.ok || !data?.ok) {
+        setAuthError(data?.error ?? (language === "vi" ? "Không gửi được email reset." : "Could not send reset email."));
+        return;
+      }
+      setAuthMessage(data.message ?? (language === "vi" ? "Đã gửi email đặt lại mật khẩu." : "Password reset email sent."));
+    } catch {
+      setAuthError(language === "vi" ? "Không thể kết nối đến máy chủ." : "Could not connect to server.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (isPracticeRoute) return null;
 
   return (
@@ -263,7 +290,8 @@ export function Navbar() {
 
             {user ? (
               <div className="flex items-center gap-2">
-                <div className="h-7 w-7 overflow-hidden rounded-full border-[2px] border-black bg-brand-peach">
+                <Link href="/profile" className="flex items-center gap-2 rounded-full border-[2px] border-black bg-white px-2 py-1 text-xs font-extrabold text-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-none">
+                  <div className="h-7 w-7 overflow-hidden rounded-full border-[2px] border-black bg-brand-peach">
                   {user.picture ? (
                     <Image src={user.picture} alt="Avatar" width={28} height={28} className="h-full w-full object-cover" unoptimized />
                   ) : (
@@ -271,7 +299,9 @@ export function Navbar() {
                       <User size={14} />
                     </div>
                   )}
-                </div>
+                  </div>
+                  <span className="hidden max-w-[90px] truncate sm:inline">{user.name}</span>
+                </Link>
                 <button onClick={handleLogout} className="text-xs font-bold text-slate-500 transition-colors hover:text-red-500">
                   {language === "vi" ? "Đăng xuất" : "Sign Out"}
                 </button>
@@ -392,6 +422,16 @@ export function Navbar() {
                       ? "Đăng nhập"
                       : "Sign in"}
               </button>
+              {authMode === "signin" && (
+                <button
+                  type="button"
+                  onClick={handlePasswordReset}
+                  disabled={submitting}
+                  className="w-full text-center text-xs font-bold text-slate-500 underline-offset-4 hover:text-brand-primary hover:underline disabled:opacity-60"
+                >
+                  {language === "vi" ? "Quên mật khẩu hoặc muốn đổi mật khẩu?" : "Forgot or want to change password?"}
+                </button>
+              )}
             </div>
 
             <p className="my-4 text-xs font-bold text-slate-400">{language === "vi" ? "hoặc" : "or"}</p>

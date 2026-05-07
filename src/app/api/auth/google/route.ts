@@ -79,17 +79,23 @@ export async function POST(request: Request) {
     picture: tokenInfo.picture,
   };
 
-  await prisma.user.upsert({
+  const savedUser = await prisma.user.upsert({
     where: { email: user.email },
     update: {
       displayName: user.name,
+      avatarUrl: user.picture,
     },
     create: {
       id: user.id,
       email: user.email,
       displayName: user.name,
+      avatarUrl: user.picture,
     },
+    select: { id: true, avatarUrl: true, displayName: true },
   });
+  user.id = savedUser.id;
+  user.name = savedUser.displayName ?? user.name;
+  user.picture = savedUser.avatarUrl ?? user.picture;
 
   return finishAuth(request, user);
 }

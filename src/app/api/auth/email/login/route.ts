@@ -55,9 +55,10 @@ export async function POST(request: Request) {
 
   const username = typeof data.user.user_metadata?.username === "string" ? data.user.user_metadata.username : null;
   const displayName = username && username.trim().length > 0 ? username : data.user.email ?? email;
+  let avatarUrl: string | undefined;
 
   try {
-    await prisma.user.upsert({
+    const savedUser = await prisma.user.upsert({
       where: { email: data.user.email ?? email },
       update: {
         displayName,
@@ -67,7 +68,9 @@ export async function POST(request: Request) {
         email: data.user.email ?? email,
         displayName,
       },
+      select: { avatarUrl: true },
     });
+    avatarUrl = savedUser.avatarUrl ?? undefined;
   } catch {
     // Prisma sync phụ thất bại không được chặn đăng nhập thật.
   }
@@ -76,6 +79,7 @@ export async function POST(request: Request) {
     id: data.user.id,
     email: data.user.email ?? email,
     name: displayName,
+    picture: avatarUrl,
   };
 
   const response = NextResponse.json({ ok: true, user });

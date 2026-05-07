@@ -17,9 +17,16 @@ export async function GET(request: NextRequest) {
     });
 
     if (!error && data.user?.email) {
+      const savedUser = await prisma.user.findUnique({
+        where: { email: data.user.email },
+        select: { avatarUrl: true, displayName: true },
+      }).catch(() => null);
+
       const username =
         typeof data.user.user_metadata?.username === "string" && data.user.user_metadata.username.trim().length > 0
           ? data.user.user_metadata.username.trim()
+          : savedUser?.displayName
+            ? savedUser.displayName
           : null;
 
       try {
@@ -27,11 +34,13 @@ export async function GET(request: NextRequest) {
           where: { email: data.user.email },
           update: {
             displayName: username ?? data.user.email,
+            avatarUrl: savedUser?.avatarUrl,
           },
           create: {
             id: data.user.id,
             email: data.user.email,
             displayName: username ?? data.user.email,
+            avatarUrl: savedUser?.avatarUrl,
           },
         });
       } catch {
@@ -45,6 +54,7 @@ export async function GET(request: NextRequest) {
           id: data.user.id,
           email: data.user.email,
           name: username ?? data.user.email,
+          picture: savedUser?.avatarUrl ?? undefined,
         }),
         appSessionCookieOptions(true)
       );
