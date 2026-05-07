@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db/prisma";
 import { appendLocalSession } from "@/lib/local-store/history";
 import { readFallbackQuestions } from "@/lib/local-store/questions";
+import { formatAssessmentText } from "@/lib/question-bank";
 import { submitSessionSchema } from "@/lib/validation/assessment";
 
 type QuestionLookup = {
@@ -24,7 +25,7 @@ function computeResult(
       questionId: answer.questionId,
       selectedOption: answer.selectedOption,
       correctOption: matched?.correctOption ?? null,
-      explanation: matched?.explanation ?? "Ch\u01b0a c\u00f3 l\u1eddi gi\u1ea3i cho c\u00e2u n\u00e0y.",
+      explanation: formatAssessmentText(matched?.explanation ?? "Ch\u01b0a c\u00f3 l\u1eddi gi\u1ea3i cho c\u00e2u n\u00e0y."),
       topic: matched?.topic ?? "numerical",
       timeSpentSec: answer.timeSpentSec,
       isCorrect,
