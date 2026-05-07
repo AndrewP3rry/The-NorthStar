@@ -320,15 +320,13 @@ export function Navbar() {
             </div>
 
             <div className="mt-4 space-y-2 text-left">
-              {authMode === "signup" && (
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(event) => setUsername(event.target.value)}
-                  placeholder="Username"
-                  className="w-full rounded-2xl border-[2px] border-black px-3 py-2 text-sm outline-none"
-                />
-              )}
+              <input
+                type={authMode === "signup" ? "text" : "email"}
+                value={authMode === "signup" ? username : email}
+                onChange={(event) => (authMode === "signup" ? setUsername(event.target.value) : setEmail(event.target.value))}
+                placeholder={authMode === "signup" ? "Username" : "Email"}
+                className="w-full rounded-2xl border-[2px] border-black px-3 py-2 text-sm outline-none"
+              />
               <input
                 type="password"
                 value={password}
@@ -336,16 +334,16 @@ export function Navbar() {
                 placeholder="Password"
                 className="w-full rounded-2xl border-[2px] border-black px-3 py-2 text-sm outline-none"
               />
-              <input
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="Email"
-                className="w-full rounded-2xl border-[2px] border-black px-3 py-2 text-sm outline-none"
-              />
 
               {authMode === "signup" && (
                 <>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="Email"
+                    className="w-full rounded-2xl border-[2px] border-black px-3 py-2 text-sm outline-none"
+                  />
                   <input
                     type="text"
                     value={verificationCode}
