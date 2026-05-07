@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Camera, KeyRound, Save, Sparkles } from "lucide-react";
+import { ArrowLeft, Camera, Save, Sparkles } from "lucide-react";
 
 type ProfileUser = {
   id: string;
@@ -95,7 +95,6 @@ export default function ProfilePage() {
   const [stats, setStats] = useState<ProfileStats | null>(null);
   const [name, setName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | undefined>();
-  const [password, setPassword] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -152,30 +151,6 @@ export default function ProfilePage() {
       window.dispatchEvent(new CustomEvent("northstar-auth-change", { detail: data.user }));
     } catch {
       setError("Không thể lưu profile.");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const changePassword = async () => {
-    setSaving(true);
-    setError(null);
-    setMessage(null);
-    try {
-      const response = await fetch("/api/auth/email/password", {
-        method: "PATCH",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ password }),
-      });
-      const data = await response.json();
-      if (!response.ok || !data.ok) {
-        setError(data.error ?? "Đổi mật khẩu thất bại.");
-        return;
-      }
-      setPassword("");
-      setMessage(data.message ?? "Đã đổi mật khẩu.");
-    } catch {
-      setError("Không thể đổi mật khẩu.");
     } finally {
       setSaving(false);
     }
@@ -243,7 +218,7 @@ export default function ProfilePage() {
           </section>
 
           <section className="hand-drawn-card p-6">
-            <h2 className="flex items-center gap-2 text-xl font-black text-black"><Sparkles size={20} /> Pentagon năng lực</h2>
+            <h2 className="flex items-center gap-2 text-xl font-black text-black"><Sparkles size={20} /> Your Progress</h2>
             <div className="mt-3 flex flex-col items-center gap-4 md:flex-row">
               <PentagonChart stats={visibleStats} />
               <div className="w-full space-y-2">
@@ -260,17 +235,6 @@ export default function ProfilePage() {
             </div>
           </section>
         </div>
-
-        <section className="hand-drawn-card p-6">
-          <h2 className="flex items-center gap-2 text-xl font-black text-black"><KeyRound size={20} /> Đổi mật khẩu</h2>
-          <p className="mt-1 text-sm text-slate-500">Áp dụng cho tài khoản email/password. Password cần 8-12 ký tự, gồm chữ hoa, chữ thường và số.</p>
-          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-            <input type="password" value={password} onChange={(event) => setPassword(event.target.value)} className="min-w-0 flex-1 rounded-2xl border-[2px] border-black px-4 py-3 text-sm font-bold outline-none" placeholder="Password mới" />
-            <button type="button" onClick={changePassword} disabled={saving || !password} className="hand-drawn-button hand-drawn-button-primary justify-center text-sm disabled:opacity-50">
-              Đổi mật khẩu
-            </button>
-          </div>
-        </section>
 
         {(message || error) && (
           <div className={`rounded-2xl border-[2px] px-4 py-3 text-sm font-bold ${error ? "border-rose-300 bg-rose-50 text-rose-700" : "border-emerald-300 bg-emerald-50 text-emerald-700"}`}>
